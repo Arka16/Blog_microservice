@@ -15,20 +15,29 @@ app.post("/posts/:id/comments", async (req, res) => {
     const { content } = req.body
     const comment_id = randomBytes(4).toString('hex')
     const comments = commentsById[req.params.id] || []
-    comments.push({ id: comment_id, content })
+    comments.push({ id: comment_id, content, status: "pending" })
     commentsById[req.params.id] = comments
-    await axios.post("http://localhost:4005/events", { type: "CommentCreated", data: { id: comment_id, content, postId: req.params.id } })
-    res.status(201).send(`Comment created for post ${req.params.id}: ${{ id: comment_id, content, postId: req.params.id }} `)
+    await axios.post("http://localhost:4005/events", { type: "CommentCreated", data: { id: comment_id, content, postId: req.params.id, status: "pending" } })
+    res.status(201).send({ id: comment_id, content, postId: req.params.id })
 
 
 })
 
 app.post("/events", async (req, res) => {
+    const { type, data } = req.body
+    if (type == "CommentModerated") {
+        const { id, content, postId, status } = data
+        const comments = commentsById[postId]
+        const comment = comments.find((comment) => comment.id === id)
+        comment.status = status
+        await axios.post("http://localhost:4005/events", { type: "CommentUpdated", data: { id, content, postId, status } })
+    }
     console.log('recieved Event', req.body.type)
     res.send({})
 })
 
 app.get("/posts/:id/comments", (req, res) => {
+
     res.send(commentsById[req.params.id] || [])
 
 })
