@@ -14,12 +14,12 @@ app.get("/posts", (req, res) => {
 
 })
 
-app.post('/posts', async (req, res) => {
+app.post('/posts/create', async (req, res) => {
     console.log("ASDF")
     const id = randomBytes(4).toString('hex')
     const { title } = req.body
     posts[id] = { id, title }
-    await axios.post("http://localhost:4005/events", { type: "PostCreated", data: posts[id] })
+    await axios.post("http://event-bus-srv:4005/events", { type: "PostCreated", data: posts[id] })
     res.status(201).send(`post created: ${posts[id]}`)
 
 })
@@ -30,6 +30,7 @@ app.post("/events", async (req, res) => {
 })
 
 app.listen(4000, () => {
+    console.log("v55")
     console.log("listening in port 4000")
 
 })
